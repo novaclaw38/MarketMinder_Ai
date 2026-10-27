@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  marketminder:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-sk_test_dummy}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-whsec_dummy}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-sk-dummy}
+      - DATABASE_URL=postgresql://marketminder:password@db:5432/marketminder
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=${SECRET_KEY:-change-in-production}
+      - INITIAL_CASH_BALANCE=25000
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+    volumes:
+      - ./data:/app/data
+    networks:
+      - marketminder-network
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=marketminder
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=marketminder
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - marketminder-network
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - marketminder-network
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - marketminder
+    networks:
+      - marketminder-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  marketminder-network:
+    driver: bridge

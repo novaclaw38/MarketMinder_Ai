@@ -1,0 +1,26 @@
+# MarketMinder AI - .dockerignore
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+*.egg-info/
+.git/
+.gitignore
+.dockerignore
+Dockerfile
+docker-compose.yml
+*.md
+.DS_Store
+.idea/
+.vscode/
+*.log
+*.db
+*.sqlite
+*.sqlite3
+data/
+ssl/
+nginx.conf
