@@ -6,13 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "api:market-scout": "python agents/market_scout.py",
-    "api:product-builder": "python agents/product_builder.py",
-    "api:finance": "python agents/finance_controller.py",
-    "api:marketing": "python agents/marketing_engine.py",
-    "api:support": "python agents/customer_success.py",
-    "api:sales": "python agents/sales_closer.py"
+    "lint": "next lint"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
@@ -21,6 +15,7 @@
     "react-dom": "18.2.0"
   },
   "devDependencies": {
+    "@types/node": "^20",
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
     "autoprefixer": "^10.4.19",

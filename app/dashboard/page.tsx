@@ -2,16 +2,8 @@
 
 import { useState, useEffect } from 'react'
 
-interface Metrics {
-  mrr: number
-  churn_rate: number
-  health_score: number
-  cash_runway: number
-  agents: any[]
-}
-
 export default function Dashboard() {
-  const [metrics, setMetrics] = useState<Metrics | null>(null)
+  const [metrics, setMetrics] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -66,7 +58,6 @@ export default function Dashboard() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        {/* Health Status */}
         <div className="mb-8">
           <div className={`text-4xl font-bold ${getStatusColor(metrics?.health_score || 0)}`}>
             {metrics?.health_score.toFixed(1) || 0}
@@ -74,7 +65,6 @@ export default function Dashboard() {
           <div className="text-gray-600">Health Score - {getHealthLabel(metrics?.health_score || 0)}</div>
         </div>
 
-        {/* Key Metrics Grid */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow p-6">
             <div className="text-sm font-medium text-gray-500">MRR</div>
@@ -100,16 +90,15 @@ export default function Dashboard() {
           <div className="bg-white rounded-lg shadow p-6">
             <div className="text-sm font-medium text-gray-500">Active Agents</div>
             <div className="text-2xl font-bold text-gray-900">
-              {metrics?.agents.filter(a => a.status === 'processing' || a.status === 'idle').length || 0}/6
+              {metrics?.agents?.filter((a: any) => a.status === 'processing' || a.status === 'idle').length || 0}/6
             </div>
           </div>
         </div>
 
-        {/* Agents Grid */}
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-xl font-bold text-gray-900 mb-4">AI Agents</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {metrics?.agents.map((agent: any) => (
+            {metrics?.agents?.map((agent: any) => (
               <div key={agent.agent_name} className="border rounded-lg p-4">
                 <div className="flex justify-between items-start">
                   <div>

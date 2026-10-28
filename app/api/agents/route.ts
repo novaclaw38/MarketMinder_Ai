@@ -32,11 +32,11 @@ export async function GET(request: NextRequest) {
     if (error) throw error
 
     // Build agent status map
-    const agentStatus = {}
+    const agentStatus: Record<string, any> = {}
     const now = new Date().toISOString()
-    
-    Object.keys(AGENTS).forEach(agentName => {
-      const agentData = data?.find(a => a.agent_name === agentName)
+
+    Object.keys(AGENTS).forEach((agentName) => {
+      const agentData = data?.find((a: any) => a.agent_name === agentName)
       agentStatus[agentName] = agentData || {
         agent_name: agentName,
         status: 'idle',
@@ -50,8 +50,8 @@ export async function GET(request: NextRequest) {
       agents: agentStatus,
       timestamp: now
     })
-  } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message ?? 'error' }, { status: 500 })
   }
 }
 
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
       success: true,
       agent: updated
     })
-  } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message ?? 'error' }, { status: 500 })
   }
 }

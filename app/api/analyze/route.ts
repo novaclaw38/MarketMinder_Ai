@@ -20,8 +20,8 @@ export async function GET(request: NextRequest) {
       health: data.health_score || 100,
       timestamp: new Date().toISOString()
     })
-  } catch (error) {
-    return NextResponse.json({ status: 'error', error: error.message }, { status: 500 })
+  } catch (error: any) {
+    return NextResponse.json({ status: 'error', error: error.message ?? 'error' }, { status: 500 })
   }
 }
 
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
       request_id: data.id,
       message: 'Analysis request received'
     })
-  } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message ?? 'error' }, { status: 500 })
   }
 }

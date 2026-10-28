@@ -31,7 +31,7 @@ export async function GET() {
     }
 
     return NextResponse.json(metrics)
-  } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message ?? 'error' }, { status: 500 })
   }
 }
