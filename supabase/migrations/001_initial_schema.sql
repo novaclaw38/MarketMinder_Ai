@@ -139,7 +139,7 @@ select
   tasks_completed,
   error_count,
   case 
-    when error_count > 0 then round((error_count::float / nullif(tasks_completed, 0)) * 100, 2)
+    when error_count > 0 then round((error_count::numeric / nullif(tasks_completed, 0)) * 100, 2)
     else 0 
   end as error_rate_percent,
   last_updated
