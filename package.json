@@ -1,0 +1,31 @@
+{
+  "name": "marketminder-ai",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "api:market-scout": "python agents/market_scout.py",
+    "api:product-builder": "python agents/product_builder.py",
+    "api:finance": "python agents/finance_controller.py",
+    "api:marketing": "python agents/marketing_engine.py",
+    "api:support": "python agents/customer_success.py",
+    "api:sales": "python agents/sales_closer.py"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "next": "14.2.4",
+    "react": "18.2.0",
+    "react-dom": "18.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.66",
+    "@types/react-dom": "^18.2.22",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.3",
+    "typescript": "^5.4.2"
+  }
+}
