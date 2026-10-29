@@ -17,7 +17,7 @@ vercel
 ### Optional
 - `OPENAI_API_KEY` - For advanced market analysis
 - `STRIPE_SECRET_KEY` - For billing
-- `CRON_SECRET` - Secret for cron job authentication
+- `CRON_SECRET` - Bearer secret for cron and machine callers (also required for `POST /api/agents`)
 
 ---
 

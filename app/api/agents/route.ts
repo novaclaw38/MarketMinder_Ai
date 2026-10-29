@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '../../../lib/supabase'
+import { requireUser, hasServiceSecret } from '../../../lib/auth'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+export const dynamic = 'force-dynamic'
 
 // Agent registry
 const AGENTS = {
@@ -17,6 +15,11 @@ const AGENTS = {
 }
 
 export async function GET(request: NextRequest) {
+  if (!hasServiceSecret(request)) {
+    const auth = await requireUser(request)
+    if (auth.error) return auth.error
+  }
+
   try {
     const searchParams = request.nextUrl.searchParams
     const agent = searchParams.get('agent')
@@ -55,7 +58,12 @@ export async function GET(request: NextRequest) {
   }
 }
 
+// Changing agent state is restricted to machine callers
 export async function POST(request: NextRequest) {
+  if (!hasServiceSecret(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   try {
     const body = await request.json()
     const { agent_name, action, data } = body

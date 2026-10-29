@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { supabaseBrowser } from '../../lib/supabase-browser'
 
 export default function Dashboard() {
   const [metrics, setMetrics] = useState<any>(null)
@@ -14,7 +15,18 @@ export default function Dashboard() {
 
   const fetchMetrics = async () => {
     try {
-      const res = await fetch('/api/metrics')
+      const { data: { session } } = await supabaseBrowser.auth.getSession()
+      if (!session) {
+        window.location.href = '/login'
+        return
+      }
+      const res = await fetch('/api/metrics', {
+        headers: { Authorization: `Bearer ${session.access_token}` }
+      })
+      if (res.status === 401) {
+        window.location.href = '/login'
+        return
+      }
       const data = await res.json()
       setMetrics(data)
     } catch (error) {

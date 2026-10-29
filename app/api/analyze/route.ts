@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '../../../lib/supabase'
 import { processAnalysisRequest } from '../../../lib/analysis'
+import { requireUser } from '../../../lib/auth'
 
 export const maxDuration = 60
 
@@ -24,6 +25,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const auth = await requireUser(request)
+  if (auth.error) return auth.error
+
   try {
     const body = await request.json()
     if (!body.query || typeof body.query !== 'string') {
@@ -36,7 +40,7 @@ export async function POST(request: NextRequest) {
         query: body.query,
         segment: body.segment,
         scope: body.scope,
-        user_id: body.user_id,
+        user_id: auth.user.id,
         status: 'pending'
       }])
       .select()
@@ -50,6 +54,7 @@ export async function POST(request: NextRequest) {
       .from('analysis_requests')
       .select('status, result, error_message')
       .eq('id', data.id)
+      .eq('user_id', auth.user.id)
       .single()
 
     return NextResponse.json({
