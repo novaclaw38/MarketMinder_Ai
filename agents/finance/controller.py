@@ -10,11 +10,12 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 from dataclasses import dataclass, field
 import stripe
+from pydantic import BaseModel
 from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, Boolean, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 
-from .base_agent import BaseAgent, AgentTask, AgentConfig
+from ..base_agent import BaseAgent, AgentTask, AgentConfig
 
 logger = logging.getLogger(__name__)
 Base = declarative_base()

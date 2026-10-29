@@ -12,7 +12,7 @@ from typing import Any, Dict, List, Optional
 from dataclasses import dataclass
 from enum import Enum
 
-from .base_agent import BaseAgent, AgentTask, AgentConfig
+from ..base_agent import BaseAgent, AgentTask, AgentConfig
 
 logger = logging.getLogger(__name__)
 

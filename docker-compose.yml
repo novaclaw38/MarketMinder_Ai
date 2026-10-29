@@ -22,6 +22,20 @@ services:
     networks:
       - marketminder-network
 
+  worker:
+    build: .
+    command: python -m scripts.worker
+    environment:
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - DATABASE_URL=postgresql://marketminder:password@db:5432/marketminder
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-}
+    depends_on:
+      - db
+    restart: unless-stopped
+    networks:
+      - marketminder-network
+
   db:
     image: postgres:15-alpine
     environment:
