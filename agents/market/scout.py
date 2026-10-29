@@ -14,8 +14,9 @@ import aiohttp
 import html
 from bs4 import BeautifulSoup
 import json
+from pydantic import BaseModel
 
-from .base_agent import BaseAgent, AgentTask, AgentConfig
+from ..base_agent import BaseAgent, AgentTask, AgentConfig
 
 logger = logging.getLogger(__name__)
 
