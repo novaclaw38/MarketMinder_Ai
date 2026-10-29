@@ -119,3 +119,29 @@ def test_no_site_url_means_no_posting(stub_llm, monkeypatch):
         await engine.tick()
         assert ch.posts == []
     run(go())
+
+
+def test_dry_run_sends_nothing_and_logs_exact_text(stub_llm, monkeypatch):
+    monkeypatch.setenv("SITE_URL", "https://site.example")
+    monkeypatch.setenv("DRY_RUN", "true")
+    monkeypatch.setenv("MAX_ACTIVE_DIVISIONS", "1")
+
+    async def go():
+        store = FakeStore()
+        ch = FakeChannel()
+        engine = VentureEngine(store, channels=[ch])
+        await engine.tick()
+        await engine.tick()
+        assert ch.posts == [] and store.t["distributions"] == []
+        previews = [a["summary"] for a in store.t["activity_log"] if a["kind"] == "dry_run"]
+        assert previews and "would post to fake" in previews[0]
+        assert "https://site.example/p/" in previews[0] and channels.DISCLOSURE in previews[0]
+    run(go())
+
+
+def test_previews_match_channel_limits(monkeypatch):
+    long_title = "T" * 600
+    assert len(Bluesky().preview(long_title, URL)) <= 300
+    assert len(Mastodon().preview(long_title, URL)) <= 500
+    x = XTwitter().preview(long_title, URL)
+    assert len(x) - len(URL) + 23 <= 280

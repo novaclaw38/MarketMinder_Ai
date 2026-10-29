@@ -31,6 +31,7 @@ services:
       - DATABASE_URL=postgresql://marketminder:password@db:5432/marketminder
       - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-}
       - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - DRY_RUN=${DRY_RUN:-}
       - SITE_URL=${SITE_URL:-}
       - INDEXNOW_KEY=${INDEXNOW_KEY:-}
       - BLUESKY_HANDLE=${BLUESKY_HANDLE:-}

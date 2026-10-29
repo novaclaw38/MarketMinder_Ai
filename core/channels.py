@@ -26,6 +26,13 @@ class Channel:
     def enabled(self) -> bool:
         raise NotImplementedError
 
+    def limit(self, url: str) -> int:
+        return 300
+
+    def preview(self, title: str, url: str, body: Optional[str] = None) -> str:
+        """The exact text this channel would publish, for dry runs."""
+        return self.compose(title, url, self.limit(url))
+
     def compose(self, title: str, url: str, max_len: int) -> str:
         tail = f"\n{url}\n{DISCLOSURE}"
         room = max_len - len(tail)
@@ -40,6 +47,9 @@ class Channel:
 class Bluesky(Channel):
     name = "bluesky"
 
+    def limit(self, url):
+        return 300
+
     def enabled(self) -> bool:
         return bool(os.environ.get("BLUESKY_HANDLE") and os.environ.get("BLUESKY_APP_PASSWORD"))
 
@@ -50,7 +60,7 @@ class Bluesky(Channel):
         session.raise_for_status()
         s = session.json()
 
-        text = self.compose(title, url, 300)
+        text = self.compose(title, url, self.limit(url))
         start = len(text[: text.index(url)].encode("utf-8"))
         record = {
             "$type": "app.bsky.feed.post", "text": text, "langs": ["en"],
@@ -71,6 +81,9 @@ class Bluesky(Channel):
 class Mastodon(Channel):
     name = "mastodon"
 
+    def limit(self, url):
+        return 500
+
     def enabled(self) -> bool:
         return bool(os.environ.get("MASTODON_BASE_URL") and os.environ.get("MASTODON_ACCESS_TOKEN"))
 
@@ -78,7 +91,7 @@ class Mastodon(Channel):
         res = await client.post(
             f"{os.environ['MASTODON_BASE_URL'].rstrip('/')}/api/v1/statuses",
             headers={"Authorization": f"Bearer {os.environ['MASTODON_ACCESS_TOKEN']}"},
-            data={"status": self.compose(title, url, 500), "visibility": "public", "language": "en"})
+            data={"status": self.compose(title, url, self.limit(url)), "visibility": "public", "language": "en"})
         res.raise_for_status()
         return res.json()["url"]
 
@@ -86,12 +99,15 @@ class Mastodon(Channel):
 class XTwitter(Channel):
     name = "x"
 
+    def limit(self, url):
+        # X counts every link as 23 characters
+        return 280 - len(url) + 23
+
     def enabled(self) -> bool:
         return bool(os.environ.get("X_ACCESS_TOKEN"))
 
     async def post(self, client, title, url, body=None):
-        # X counts every link as 23 characters
-        text = self.compose(title, url, 280 - len(url) + 23)
+        text = self.compose(title, url, self.limit(url))
         res = await client.post(
             "https://api.twitter.com/2/tweets",
             headers={"Authorization": f"Bearer {os.environ['X_ACCESS_TOKEN']}"},
@@ -106,6 +122,9 @@ class DevTo(Channel):
 
     def enabled(self) -> bool:
         return bool(os.environ.get("DEVTO_API_KEY"))
+
+    def preview(self, title, url, body=None):
+        return f"{title}\n{(body or '')[:300]}...\n[canonical: {url}]"
 
     async def post(self, client, title, url, body=None):
         if not body:

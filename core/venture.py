@@ -48,6 +48,8 @@ class VentureEngine:
         self.indexnow = indexnow or channel_mod.IndexNow()
         self.site_url = os.environ.get("SITE_URL", "").rstrip("/")
         self.daily_post_cap = _env_int("DAILY_POST_CAP_PER_CHANNEL", 3)
+        # Dry run: everything works as normal except nothing is sent to any external channel
+        self.dry_run = os.environ.get("DRY_RUN", "").lower() in ("1", "true", "yes")
         self.max_divisions = _env_int("MAX_ACTIVE_DIVISIONS", 3)
         self.division_budget = _env_int("DIVISION_BUDGET_CENTS", 2000)
         self.global_budget = _env_int("GLOBAL_BUDGET_CENTS", 6000)
@@ -284,6 +286,15 @@ class VentureEngine:
         if not self.site_url or not policy.action_allowed("distribute_post"):
             return
         url = f"{self.site_url}{path}"
+        if self.dry_run:
+            for channel in self.channels:
+                if kind == "product" and channel.name == "devto":
+                    continue
+                await self.log(division, "marketer", "dry_run",
+                               f"DRY RUN, would post to {channel.name}: {channel.preview(title, url, body)}")
+            if self.indexnow.enabled():
+                await self.log(division, "marketer", "dry_run", f"DRY RUN, would submit {path} to IndexNow")
+            return
         since = (now() - timedelta(hours=24)).isoformat()
         async with httpx.AsyncClient(timeout=20) as client:
             if self.indexnow.enabled():

@@ -156,3 +156,7 @@ Set these where the **worker** runs (and `SITE_URL` on Vercel too, for the sitem
 | `DEVTO_API_KEY` | Full-article cross-posts to DEV with a canonical URL back to your blog |
 
 Limits applied to every channel: original posts only (no replies, DMs, follows or mentions), an "(AI-written)" disclosure on each post, and `DAILY_POST_CAP_PER_CHANNEL` (default 3) per division. Run each account as a clearly labelled bot or automated account, as each platform's rules require.
+
+### Dry run
+
+Set `DRY_RUN=true` on the worker to run everything (research, products, articles, budgets, deadlines) without sending anything to Bluesky, Mastodon, X, DEV.to or IndexNow. Each post that would have gone out is written to the division's activity feed as `DRY RUN, would post to <channel>: <exact text>`. Unset `DRY_RUN` to go live. Dry run does not stop the storefront, which is always public, and it still uses your Groq budget.

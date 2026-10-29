@@ -77,7 +77,10 @@ async def main():
     for agent in build_agents():
         mission_control.register_agent(agent)
     await mission_control.start()
-    venture_task = asyncio.create_task(venture_loop(VentureEngine(VentureStore())))
+    engine = VentureEngine(VentureStore())
+    if engine.dry_run:
+        logger.warning("DRY_RUN is on: no posts or index pings will be sent. Unset DRY_RUN to go live.")
+    venture_task = asyncio.create_task(venture_loop(engine))
 
     try:
         while True:
