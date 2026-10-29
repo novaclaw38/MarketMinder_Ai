@@ -15,7 +15,7 @@ vercel
 - `SUPABASE_SERVICE_ROLE_KEY` - Service role key (for server-side operations)
 
 ### Optional
-- `OPENAI_API_KEY` - For advanced market analysis
+- `GROQ_API_KEY` - LLM for analysis and the venture engine (optional `GROQ_MODEL`, default `llama-3.3-70b-versatile`). `OPENAI_API_KEY` is used only if no Groq key is set.
 - `STRIPE_SECRET_KEY` - For billing
 - `STRIPE_WEBHOOK_SECRET` - Signing secret for the webhook at `/api/billing/webhook` (events: `checkout.session.completed`, `customer.subscription.*`, `invoice.paid`, `charge.refunded`)
 - `STRIPE_PRICE_STARTER`, `STRIPE_PRICE_PROFESSIONAL`, `STRIPE_PRICE_ENTERPRISE` - Stripe recurring price IDs

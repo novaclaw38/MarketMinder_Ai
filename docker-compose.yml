@@ -30,6 +30,15 @@ services:
       - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
       - DATABASE_URL=postgresql://marketminder:password@db:5432/marketminder
       - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-}
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - SITE_URL=${SITE_URL:-}
+      - INDEXNOW_KEY=${INDEXNOW_KEY:-}
+      - BLUESKY_HANDLE=${BLUESKY_HANDLE:-}
+      - BLUESKY_APP_PASSWORD=${BLUESKY_APP_PASSWORD:-}
+      - MASTODON_BASE_URL=${MASTODON_BASE_URL:-}
+      - MASTODON_ACCESS_TOKEN=${MASTODON_ACCESS_TOKEN:-}
+      - X_ACCESS_TOKEN=${X_ACCESS_TOKEN:-}
+      - DEVTO_API_KEY=${DEVTO_API_KEY:-}
     depends_on:
       - db
     restart: unless-stopped

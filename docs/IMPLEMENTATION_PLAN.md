@@ -153,7 +153,7 @@ The stakes device is implemented as a **wind-down protocol**, not a threat: on a
 | Agents | Python (`agents/`, `core/mission_control.py`), run by `scripts/worker.py` on any always-on host (Docker compose service provided) |
 | Sync | `core/supabase_sync.py` mirrors agent health and metrics to Supabase |
 | Payments | Stripe code in `lib/stripe.ts` and the webhook. **Needs a processor supported for South African merchants (A4)**; the webhook and checkout are the only places that change. |
-| LLM | OpenAI via `lib/analysis.ts`, model set by `OPENAI_MODEL` |
+| LLM | Groq (OpenAI-compatible API) via `lib/analysis.ts` and `core/llm.py`; model set by `GROQ_MODEL`; OpenAI is a fallback |
 
 ## 9. Legal and ethical constraints
 

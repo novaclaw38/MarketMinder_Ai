@@ -1,6 +1,23 @@
 import { supabase } from './supabase'
 
-const MODEL = process.env.OPENAI_MODEL || 'gpt-4o-mini'
+// Groq (OpenAI-compatible) is preferred; OpenAI is the fallback
+function provider() {
+  if (process.env.GROQ_API_KEY) {
+    return {
+      url: 'https://api.groq.com/openai/v1/chat/completions',
+      key: process.env.GROQ_API_KEY,
+      model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile'
+    }
+  }
+  if (process.env.OPENAI_API_KEY) {
+    return {
+      url: 'https://api.openai.com/v1/chat/completions',
+      key: process.env.OPENAI_API_KEY,
+      model: process.env.OPENAI_MODEL || 'gpt-4o-mini'
+    }
+  }
+  return null
+}
 
 interface AnalysisRequest {
   id: string
@@ -10,11 +27,11 @@ interface AnalysisRequest {
 }
 
 async function generateAnalysis(req: AnalysisRequest) {
-  const apiKey = process.env.OPENAI_API_KEY
-  if (!apiKey) {
+  const llm = provider()
+  if (!llm) {
     return {
       result: {
-        summary: 'OPENAI_API_KEY not configured; no AI analysis was generated.',
+        summary: 'GROQ_API_KEY not configured; no AI analysis was generated.',
         query: req.query,
         segment: req.segment,
         generated_by: 'fallback'
@@ -23,11 +40,11 @@ async function generateAnalysis(req: AnalysisRequest) {
     }
   }
 
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+  const res = await fetch(llm.url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${llm.key}` },
     body: JSON.stringify({
-      model: MODEL,
+      model: llm.model,
       response_format: { type: 'json_object' },
       messages: [
         {
@@ -42,12 +59,12 @@ async function generateAnalysis(req: AnalysisRequest) {
       ]
     })
   })
-  if (!res.ok) throw new Error(`OpenAI request failed: ${res.status}`)
+  if (!res.ok) throw new Error(`LLM request failed: ${res.status}`)
 
   const json = await res.json()
   const content = json.choices?.[0]?.message?.content
   return {
-    result: { ...JSON.parse(content), generated_by: MODEL },
+    result: { ...JSON.parse(content), generated_by: llm.model },
     tokens: json.usage?.total_tokens ?? 0
   }
 }

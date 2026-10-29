@@ -1,4 +1,4 @@
-"""Minimal OpenAI chat client returning JSON plus a cost estimate."""
+"""Minimal chat client (Groq by default, OpenAI as fallback) returning JSON plus a cost estimate."""
 
 import json
 import os
@@ -6,10 +6,20 @@ from typing import Any, Dict, Optional, Tuple
 
 import httpx
 
-MODEL = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
-# USD per 1M tokens for the default model; override via env if the model changes
-PRICE_IN = float(os.environ.get("LLM_PRICE_IN_PER_M", "0.15"))
-PRICE_OUT = float(os.environ.get("LLM_PRICE_OUT_PER_M", "0.60"))
+# USD per 1M tokens; defaults match llama-3.3-70b-versatile on Groq. Override via env if the model changes.
+PRICE_IN = float(os.environ.get("LLM_PRICE_IN_PER_M", "0.59"))
+PRICE_OUT = float(os.environ.get("LLM_PRICE_OUT_PER_M", "0.79"))
+
+
+def _provider():
+    """Returns (url, key, model) for the configured provider, or None."""
+    if os.environ.get("GROQ_API_KEY"):
+        return ("https://api.groq.com/openai/v1/chat/completions", os.environ["GROQ_API_KEY"],
+                os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile"))
+    if os.environ.get("OPENAI_API_KEY"):
+        return ("https://api.openai.com/v1/chat/completions", os.environ["OPENAI_API_KEY"],
+                os.environ.get("OPENAI_MODEL", "gpt-4o-mini"))
+    return None
 
 
 class LLMUnavailable(RuntimeError):
@@ -18,15 +28,16 @@ class LLMUnavailable(RuntimeError):
 
 async def chat_json(system: str, user: str) -> Tuple[Dict[str, Any], int]:
     """Returns (parsed JSON, cost in cents, rounded up). Raises LLMUnavailable without a key."""
-    key = os.environ.get("OPENAI_API_KEY")
-    if not key:
-        raise LLMUnavailable("OPENAI_API_KEY is not set")
+    provider = _provider()
+    if not provider:
+        raise LLMUnavailable("GROQ_API_KEY is not set")
+    url, key, model = provider
     async with httpx.AsyncClient(timeout=90) as client:
         res = await client.post(
-            "https://api.openai.com/v1/chat/completions",
+            url,
             headers={"Authorization": f"Bearer {key}"},
             json={
-                "model": MODEL,
+                "model": model,
                 "response_format": {"type": "json_object"},
                 "messages": [
                     {"role": "system", "content": system},

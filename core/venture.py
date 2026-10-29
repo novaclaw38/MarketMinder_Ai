@@ -66,7 +66,7 @@ class VentureEngine:
             try:
                 await self.run_agents(division)
             except llm.LLMUnavailable:
-                await self.log(division, "system", "blocked", "OPENAI_API_KEY missing; division cannot work")
+                await self.log(division, "system", "blocked", "GROQ_API_KEY missing; division cannot work")
             except Exception as e:
                 logger.exception("division %s step failed", division["slug"])
                 await self.log(division, "system", "error", f"step failed: {e}")
@@ -123,7 +123,7 @@ class VentureEngine:
         try:
             ideas, cost = await self.research(await self._lessons())
         except llm.LLMUnavailable:
-            logger.warning("OPENAI_API_KEY missing; cannot research")
+            logger.warning("GROQ_API_KEY missing; cannot research")
             return
 
         launched = []

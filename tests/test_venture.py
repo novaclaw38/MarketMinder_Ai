@@ -144,6 +144,7 @@ def test_budget_exhaustion_deletes_unprofitable_division(stub_llm):
 
 
 def test_no_api_key_means_no_launch(monkeypatch):
+    monkeypatch.delenv("GROQ_API_KEY", raising=False)
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     async def go():
         store = FakeStore()
