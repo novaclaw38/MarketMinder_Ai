@@ -18,7 +18,7 @@ export default function BuyButton({ slug, label }: { slug: string; label: string
 
   return (
     <div>
-      <button onClick={buy} className="px-5 py-3 rounded bg-black text-white">{label}</button>
+      <button type="button" onClick={buy} className="px-5 py-3 rounded bg-black text-white">{label}</button>
       {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
     </div>
   )

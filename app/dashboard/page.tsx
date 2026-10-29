@@ -138,7 +138,7 @@ export default function Dashboard() {
             <h1 className="text-3xl font-bold text-gray-900">MarketMinder AI</h1>
             <p className="text-gray-600">Mission Control Dashboard</p>
           </div>
-          <button onClick={signOut} className="text-sm text-gray-600 hover:text-gray-900">Sign out</button>
+          <button type="button" onClick={signOut} className="text-sm text-gray-600 hover:text-gray-900">Sign out</button>
         </div>
       </header>
 
@@ -241,7 +241,7 @@ export default function Dashboard() {
           ) : (
             <div className="flex flex-wrap gap-3">
               {TIERS.map((tier) => (
-                <button key={tier} onClick={() => subscribe(tier)}
+                <button type="button" key={tier} onClick={() => subscribe(tier)}
                   className="px-4 py-2 rounded bg-blue-600 text-white capitalize hover:bg-blue-700">
                   Subscribe: {tier}
                 </button>
@@ -255,7 +255,7 @@ export default function Dashboard() {
           <form onSubmit={submitAnalysis} className="flex gap-3 mb-4">
             <input className="flex-1 border rounded p-2" placeholder="What market question should we analyze?"
               value={query} onChange={(e) => setQuery(e.target.value)} required />
-            <button disabled={submitting} className="px-4 py-2 rounded bg-black text-white disabled:opacity-50">
+            <button type="submit" disabled={submitting} className="px-4 py-2 rounded bg-black text-white disabled:opacity-50">
               {submitting ? 'Analyzing...' : 'Analyze'}
             </button>
           </form>
