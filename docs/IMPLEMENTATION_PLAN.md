@@ -150,7 +150,7 @@ The stakes device is implemented as a **wind-down protocol**, not a threat: on a
 |-------|---------------|
 | Dashboard and API | Next.js on Vercel (`app/`): `/dashboard`, `/login`, `/api/metrics`, `/api/agents`, `/api/analyze`, `/api/analyses`, `/api/billing/*`, `/api/cron/orchestrate` |
 | Database and auth | Supabase Postgres with Row Level Security and Supabase Auth (`supabase/migrations/`) |
-| Venture engine | TypeScript (`lib/venture/`), run by a Vercel cron at `/api/cron/venture` every 10 minutes |
+| Venture engine | TypeScript (`lib/venture/`), triggered at `/api/cron/venture` every 10 minutes by GitHub Actions (Vercel Hobby crons are daily only) |
 | Legacy agents | Python (`agents/`, `core/mission_control.py`), optional, run by `scripts/worker.py` on any always-on host (Docker compose service provided) |
 | Sync | `core/supabase_sync.py` mirrors agent health and metrics to Supabase |
 | Payments | Stripe code in `lib/stripe.ts` and the webhook. **Needs a processor supported for South African merchants (A4)**; the webhook and checkout are the only places that change. |

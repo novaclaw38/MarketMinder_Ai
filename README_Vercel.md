@@ -144,12 +144,11 @@ marketminder-ai/
 
 ## Venture engine (runs on Vercel)
 
-The engine runs inside Vercel: a cron calls `/api/cron/venture` every 10 minutes (`vercel.json`). Each call launches divisions when there is capacity, evaluates deadlines, and gives every active division one step of work. No separate worker is needed for this. (The Python agent worker in `scripts/worker.py` is optional and only syncs the older agent metrics.)
+The engine runs inside Vercel: `/api/cron/venture` launches divisions when there is capacity, evaluates deadlines, and gives every active division one step of work.
 
-Requirements:
-- `CRON_SECRET` set. Vercel sends it as the bearer token on cron calls.
-- **A Vercel plan that allows sub-daily crons (Pro).** On Hobby, crons may run only once a day, and a more frequent schedule makes the deploy fail. On Hobby, change both schedules in `vercel.json` to daily, for example `0 6 * * *`; the engine still works but each division then gets one step per day, which is too slow for a 7-day window.
-- `GROQ_API_KEY` (optional `GROQ_MODEL`, default `llama-3.3-70b-versatile`).
+**Scheduling.** Vercel Hobby allows only daily crons, and a more frequent schedule makes the deploy fail ("Hobby accounts are limited to daily cron jobs"). So `vercel.json` has daily crons as a floor, and `.github/workflows/tick.yml` calls both endpoints every 10 minutes from GitHub Actions. Add two repository secrets (Settings -> Secrets and variables -> Actions): `APP_URL` (your production URL, no trailing slash) and `CRON_SECRET` (same value as in Vercel). GitHub's scheduler can delay runs by several minutes, which is fine here. On Vercel Pro you can instead set `*/10 * * * *` in `vercel.json` and delete the workflow. Scheduled workflows only run from the default branch, and Vercel crons only run on production deployments, so merge to your production branch first.
+
+Requirements: `CRON_SECRET` set in Vercel, and `GROQ_API_KEY` (optional `GROQ_MODEL`, default `llama-3.3-70b-versatile`).
 
 Check it by hand: `curl -H "Authorization: Bearer $CRON_SECRET" https://<your-app>/api/cron/venture` returns `{"ok":true,"dry_run":...,"launched":N,"deleted":N}`.
 
