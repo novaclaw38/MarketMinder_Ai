@@ -150,10 +150,11 @@ The stakes device is implemented as a **wind-down protocol**, not a threat: on a
 |-------|---------------|
 | Dashboard and API | Next.js on Vercel (`app/`): `/dashboard`, `/login`, `/api/metrics`, `/api/agents`, `/api/analyze`, `/api/analyses`, `/api/billing/*`, `/api/cron/orchestrate` |
 | Database and auth | Supabase Postgres with Row Level Security and Supabase Auth (`supabase/migrations/`) |
-| Agents | Python (`agents/`, `core/mission_control.py`), run by `scripts/worker.py` on any always-on host (Docker compose service provided) |
+| Venture engine | TypeScript (`lib/venture/`), run by a Vercel cron at `/api/cron/venture` every 10 minutes |
+| Legacy agents | Python (`agents/`, `core/mission_control.py`), optional, run by `scripts/worker.py` on any always-on host (Docker compose service provided) |
 | Sync | `core/supabase_sync.py` mirrors agent health and metrics to Supabase |
 | Payments | Stripe code in `lib/stripe.ts` and the webhook. **Needs a processor supported for South African merchants (A4)**; the webhook and checkout are the only places that change. |
-| LLM | Groq (OpenAI-compatible API) via `lib/analysis.ts` and `core/llm.py`; model set by `GROQ_MODEL`; OpenAI is a fallback |
+| LLM | Groq (OpenAI-compatible API) via `lib/analysis.ts` and `lib/venture/llm.ts`; model set by `GROQ_MODEL`; OpenAI is a fallback |
 
 ## 9. Legal and ethical constraints
 

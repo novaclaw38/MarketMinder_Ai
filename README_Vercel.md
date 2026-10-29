@@ -142,13 +142,26 @@ marketminder-ai/
 ```
 ---
 
-## Distribution channels (venture engine)
+## Venture engine (runs on Vercel)
 
-Set these where the **worker** runs (and `SITE_URL` on Vercel too, for the sitemap). A channel with no credentials is simply off.
+The engine runs inside Vercel: a cron calls `/api/cron/venture` every 10 minutes (`vercel.json`). Each call launches divisions when there is capacity, evaluates deadlines, and gives every active division one step of work. No separate worker is needed for this. (The Python agent worker in `scripts/worker.py` is optional and only syncs the older agent metrics.)
+
+Requirements:
+- `CRON_SECRET` set. Vercel sends it as the bearer token on cron calls.
+- **A Vercel plan that allows sub-daily crons (Pro).** On Hobby, crons may run only once a day, and a more frequent schedule makes the deploy fail. On Hobby, change both schedules in `vercel.json` to daily, for example `0 6 * * *`; the engine still works but each division then gets one step per day, which is too slow for a 7-day window.
+- `GROQ_API_KEY` (optional `GROQ_MODEL`, default `llama-3.3-70b-versatile`).
+
+Check it by hand: `curl -H "Authorization: Bearer $CRON_SECRET" https://<your-app>/api/cron/venture` returns `{"ok":true,"dry_run":...,"launched":N,"deleted":N}`.
+
+Tuning (all optional env vars): `MAX_ACTIVE_DIVISIONS` (3), `DIVISION_BUDGET_CENTS` (2000), `GLOBAL_BUDGET_CENTS` (6000), `LIFETIME_LOSS_CAP_CENTS` (10000), `WINDOW_DAYS` (7), `MAX_AGENTS_PER_DIVISION` (8), `DEFAULT_CURRENCY` (usd).
+
+## Distribution channels
+
+Set these in Vercel. A channel with no credentials is simply off.
 
 | Variable(s) | Channel |
 |---|---|
-| `SITE_URL` (e.g. `https://your-app.vercel.app`) | **Required** for any distribution; used to build links |
+| `SITE_URL` (e.g. `https://your-app.vercel.app`) | **Required** for any distribution; used to build links and the sitemap |
 | `INDEXNOW_KEY` (any 8-128 char hex/alnum string) | Instant indexing ping to Bing/Yandex; key is served at `/indexnow-key` |
 | `BLUESKY_HANDLE`, `BLUESKY_APP_PASSWORD` | Bluesky posts (use an app password, not your login password) |
 | `MASTODON_BASE_URL`, `MASTODON_ACCESS_TOKEN` | Mastodon posts (token needs `write:statuses`) |
@@ -159,4 +172,4 @@ Limits applied to every channel: original posts only (no replies, DMs, follows o
 
 ### Dry run
 
-Set `DRY_RUN=true` on the worker to run everything (research, products, articles, budgets, deadlines) without sending anything to Bluesky, Mastodon, X, DEV.to or IndexNow. Each post that would have gone out is written to the division's activity feed as `DRY RUN, would post to <channel>: <exact text>`. Unset `DRY_RUN` to go live. Dry run does not stop the storefront, which is always public, and it still uses your Groq budget.
+Set `DRY_RUN=true` in Vercel to run everything (research, products, articles, budgets, deadlines) without sending anything to Bluesky, Mastodon, X, DEV.to or IndexNow. Each post that would have gone out is written to the division's activity feed as `DRY RUN, would post to <channel>: <exact text>`. Remove `DRY_RUN` to go live. Dry run does not stop the storefront, which is always public, and it still uses your Groq budget.

@@ -20,13 +20,10 @@ from agents import (
 )
 from core.mission_control import mission_control
 from core.supabase_sync import SupabaseSync
-from core.venture import VentureEngine
-from core.venture_store import VentureStore
 
 logger = logging.getLogger("worker")
 
 SYNC_INTERVAL = int(os.environ.get("SYNC_INTERVAL_SECONDS", "30"))
-VENTURE_INTERVAL = int(os.environ.get("VENTURE_INTERVAL_SECONDS", "300"))
 
 
 def build_agents():
@@ -62,25 +59,12 @@ async def sync_once(sync: SupabaseSync) -> None:
     await sync.sync_business(dashboard["health_score"], dashboard["metrics"])
 
 
-async def venture_loop(engine: VentureEngine) -> None:
-    while True:
-        try:
-            await engine.tick()
-        except Exception as e:
-            logger.error(f"Venture tick failed: {e}")
-        await asyncio.sleep(VENTURE_INTERVAL)
-
-
 async def main():
     logging.basicConfig(level=logging.INFO)
     sync = SupabaseSync()
     for agent in build_agents():
         mission_control.register_agent(agent)
     await mission_control.start()
-    engine = VentureEngine(VentureStore())
-    if engine.dry_run:
-        logger.warning("DRY_RUN is on: no posts or index pings will be sent. Unset DRY_RUN to go live.")
-    venture_task = asyncio.create_task(venture_loop(engine))
 
     try:
         while True:
@@ -90,7 +74,6 @@ async def main():
                 logger.error(f"Supabase sync failed: {e}")
             await asyncio.sleep(SYNC_INTERVAL)
     finally:
-        venture_task.cancel()
         await mission_control.stop()
         await sync.close()
 
