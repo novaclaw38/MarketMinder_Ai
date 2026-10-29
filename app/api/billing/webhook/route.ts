@@ -71,7 +71,19 @@ export async function POST(request: NextRequest) {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session
-        if (session.mode === 'subscription' && session.subscription) {
+        if (session.mode === 'payment' && session.metadata?.division_id && session.payment_status === 'paid') {
+          // Storefront purchase: credit the division's ledger (ref makes retries idempotent)
+          await supabase.from('ledger').upsert(
+            {
+              division_id: session.metadata.division_id,
+              kind: 'revenue',
+              amount_cents: session.amount_total ?? 0,
+              description: 'Product sale',
+              ref: `revenue:${session.id}`
+            },
+            { onConflict: 'ref', ignoreDuplicates: true }
+          )
+        } else if (session.mode === 'subscription' && session.subscription) {
           const id = typeof session.subscription === 'string' ? session.subscription : session.subscription.id
           await syncSubscription(await stripe.subscriptions.retrieve(id))
         }
@@ -82,6 +94,23 @@ export async function POST(request: NextRequest) {
       case 'customer.subscription.deleted':
         await syncSubscription(event.data.object as Stripe.Subscription)
         break
+      case 'charge.refunded': {
+        const charge = event.data.object as Stripe.Charge
+        if (charge.metadata?.division_id) {
+          // amount_refunded is cumulative, so upsert one row per charge
+          await supabase.from('ledger').upsert(
+            {
+              division_id: charge.metadata.division_id,
+              kind: 'refund',
+              amount_cents: charge.amount_refunded,
+              description: 'Refund',
+              ref: `refund:${charge.id}`
+            },
+            { onConflict: 'ref' }
+          )
+        }
+        break
+      }
       case 'invoice.paid':
         await recordInvoice(event.data.object as Stripe.Invoice)
         break

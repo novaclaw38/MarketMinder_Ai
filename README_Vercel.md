@@ -17,7 +17,7 @@ vercel
 ### Optional
 - `OPENAI_API_KEY` - For advanced market analysis
 - `STRIPE_SECRET_KEY` - For billing
-- `STRIPE_WEBHOOK_SECRET` - Signing secret for the webhook at `/api/billing/webhook` (events: `checkout.session.completed`, `customer.subscription.*`, `invoice.paid`)
+- `STRIPE_WEBHOOK_SECRET` - Signing secret for the webhook at `/api/billing/webhook` (events: `checkout.session.completed`, `customer.subscription.*`, `invoice.paid`, `charge.refunded`)
 - `STRIPE_PRICE_STARTER`, `STRIPE_PRICE_PROFESSIONAL`, `STRIPE_PRICE_ENTERPRISE` - Stripe recurring price IDs
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` is also used by the login page
 - `CRON_SECRET` - Bearer secret for cron and machine callers (also required for `POST /api/agents`)

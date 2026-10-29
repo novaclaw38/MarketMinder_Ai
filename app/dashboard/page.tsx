@@ -9,6 +9,7 @@ export default function Dashboard() {
   const [metrics, setMetrics] = useState<any>(null)
   const [analyses, setAnalyses] = useState<any[]>([])
   const [subscription, setSubscription] = useState<any>(null)
+  const [divisions, setDivisions] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [query, setQuery] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -34,10 +35,13 @@ export default function Dashboard() {
 
   const refresh = useCallback(async () => {
     try {
-      const [m, a, b] = await Promise.all([api('/api/metrics'), api('/api/analyses'), api('/api/billing')])
+      const [m, a, b, d] = await Promise.all([
+        api('/api/metrics'), api('/api/analyses'), api('/api/billing'), api('/api/divisions')
+      ])
       if (m) setMetrics(await m.json())
       if (a) setAnalyses((await a.json()).analyses ?? [])
       if (b) setSubscription((await b.json()).subscription)
+      if (d) setDivisions((await d.json()).divisions ?? [])
     } catch (error) {
       console.error('Error fetching dashboard data:', error)
     } finally {
@@ -87,6 +91,14 @@ export default function Dashboard() {
   const signOut = async () => {
     await supabaseBrowser.auth.signOut()
     window.location.href = '/login'
+  }
+
+  const money = (cents: number = 0) => `${cents < 0 ? '-' : ''}$${(Math.abs(cents) / 100).toFixed(2)}`
+  const timeLeft = (deadline: string) => {
+    const ms = new Date(deadline).getTime() - Date.now()
+    if (ms <= 0) return 'deadline reached'
+    const h = Math.floor(ms / 3_600_000)
+    return `${Math.floor(h / 24)}d ${h % 24}h left`
   }
 
   const getStatusColor = (score: number) => {
@@ -156,6 +168,64 @@ export default function Dashboard() {
           <div className="bg-white rounded-lg shadow p-6">
             <div className="text-sm font-medium text-gray-500">Active Agents</div>
             <div className="text-2xl font-bold text-gray-900">{activeAgents}/{agents.length}</div>
+          </div>
+        </div>
+
+        <div>
+          <h2 className="text-xl font-bold text-gray-900 mb-1">Divisions</h2>
+          <p className="text-sm text-gray-500 mb-4">
+            Each division is its own business with agents, a budget and a P&amp;L. It must turn a profit within its
+            window or it is deleted.
+          </p>
+          {divisions.length === 0 && (
+            <p className="text-sm text-gray-500">No divisions yet. The venture engine launches them when the worker is running.</p>
+          )}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {divisions.map((d) => (
+              <div key={d.id} className={`bg-white rounded-lg shadow p-6 ${d.status === 'deleted' ? 'opacity-60' : ''}`}>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-bold text-gray-900">{d.name}</h3>
+                    <p className="text-sm text-gray-500">{d.thesis}</p>
+                  </div>
+                  <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap ${
+                    d.status === 'active' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
+                  }`}>
+                    {d.status === 'active' ? `cycle ${d.cycle} · ${timeLeft(d.deadline)}` : 'deleted'}
+                  </span>
+                </div>
+                {d.end_reason && <p className="mt-2 text-sm text-red-600">{d.end_reason}</p>}
+                <div className="grid grid-cols-4 gap-2 mt-4 text-sm">
+                  <div><div className="text-gray-500">Revenue</div><div className="font-medium">{money(d.pnl?.revenue_cents)}</div></div>
+                  <div><div className="text-gray-500">Refunds</div><div className="font-medium">{money(d.pnl?.refund_cents)}</div></div>
+                  <div><div className="text-gray-500">Costs</div>
+                    <div className="font-medium">{money(d.pnl?.cost_cents)} / {money(d.budget_cents)}</div></div>
+                  <div><div className="text-gray-500">Profit</div>
+                    <div className={`font-bold ${(d.pnl?.profit_cents ?? 0) > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {money(d.pnl?.profit_cents)}</div></div>
+                </div>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {d.agents.map((a: any) => (
+                    <span key={a.id} className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-700">
+                      {a.role} · {a.tasks_completed}
+                    </span>
+                  ))}
+                </div>
+                {d.products.map((p: any) => (
+                  <a key={p.slug} href={`/p/${p.slug}`} className="block mt-3 text-sm underline">
+                    {p.title} ({money(p.price_cents)})
+                  </a>
+                ))}
+                <ul className="mt-4 space-y-1 text-xs text-gray-600">
+                  {d.activity.map((a: any) => (
+                    <li key={a.id}>
+                      <span className="text-gray-400">{new Date(a.created_at).toLocaleString()}</span>{' '}
+                      <span className="font-medium">{a.agent_role}</span>: {a.summary}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
         </div>
 
