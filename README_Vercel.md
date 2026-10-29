@@ -140,3 +140,19 @@ marketminder-ai/
 ├── tailwind.config.js
 └── VERCEL_DEPLOY.md
 ```
+---
+
+## Distribution channels (venture engine)
+
+Set these where the **worker** runs (and `SITE_URL` on Vercel too, for the sitemap). A channel with no credentials is simply off.
+
+| Variable(s) | Channel |
+|---|---|
+| `SITE_URL` (e.g. `https://your-app.vercel.app`) | **Required** for any distribution; used to build links |
+| `INDEXNOW_KEY` (any 8-128 char hex/alnum string) | Instant indexing ping to Bing/Yandex; key is served at `/indexnow-key` |
+| `BLUESKY_HANDLE`, `BLUESKY_APP_PASSWORD` | Bluesky posts (use an app password, not your login password) |
+| `MASTODON_BASE_URL`, `MASTODON_ACCESS_TOKEN` | Mastodon posts (token needs `write:statuses`) |
+| `X_ACCESS_TOKEN` | X posts (OAuth 2.0 user token with `tweet.write`; tokens expire, so refresh as needed) |
+| `DEVTO_API_KEY` | Full-article cross-posts to DEV with a canonical URL back to your blog |
+
+Limits applied to every channel: original posts only (no replies, DMs, follows or mentions), an "(AI-written)" disclosure on each post, and `DAILY_POST_CAP_PER_CHANNEL` (default 3) per division. Run each account as a clearly labelled bot or automated account, as each platform's rules require.

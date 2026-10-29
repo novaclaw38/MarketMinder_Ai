@@ -20,7 +20,7 @@ FORBIDDEN_TERMS = [
 ]
 
 # What agents may do. Anything else is rejected, including money movement and unsolicited contact.
-ALLOWED_ACTIONS = {"research", "create_product", "publish_article", "review_content", "spawn_agent", "log"}
+ALLOWED_ACTIONS = {"research", "create_product", "publish_article", "review_content", "spawn_agent", "log", "distribute_post"}
 
 
 def screen_text(text: str) -> Tuple[bool, str]:

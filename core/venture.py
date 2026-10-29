@@ -13,7 +13,9 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
-from core import llm, policy
+import httpx
+
+from core import channels as channel_mod, llm, policy
 from core.venture_store import VentureStore
 
 logger = logging.getLogger("venture")
@@ -39,8 +41,13 @@ def slugify(text: str) -> str:
 
 
 class VentureEngine:
-    def __init__(self, store: VentureStore):
+    def __init__(self, store: VentureStore, channels: Optional[List[channel_mod.Channel]] = None,
+                 indexnow: Optional[channel_mod.IndexNow] = None):
         self.store = store
+        self.channels = channel_mod.build_channels() if channels is None else channels
+        self.indexnow = indexnow or channel_mod.IndexNow()
+        self.site_url = os.environ.get("SITE_URL", "").rstrip("/")
+        self.daily_post_cap = _env_int("DAILY_POST_CAP_PER_CHANNEL", 3)
         self.max_divisions = _env_int("MAX_ACTIVE_DIVISIONS", 3)
         self.division_budget = _env_int("DIVISION_BUDGET_CENTS", 2000)
         self.global_budget = _env_int("GLOBAL_BUDGET_CENTS", 6000)
@@ -247,6 +254,7 @@ class VentureEngine:
         await self._touch_agent(division, "builder")
         await self.log(division, "builder", "product_published",
                        f"Published '{product['title']}' at {price}c: /p/{product['slug']}")
+        await self.distribute(division, "product", product["title"], f"/p/{product['slug']}")
 
     async def publish_article(self, division: Dict[str, Any], product: Dict[str, Any]) -> None:
         system = (
@@ -266,6 +274,42 @@ class VentureEngine:
             "slug": slugify(data["title"]), "title": data["title"], "body": data["body"]})
         await self._touch_agent(division, "marketer")
         await self.log(division, "marketer", "article_published", f"Published article: /blog/{article['slug']}")
+        await self.distribute(division, "article", article["title"], f"/blog/{article['slug']}", article["body"])
+
+    # ---- distribution -------------------------------------------------------------
+
+    async def distribute(self, division: Dict[str, Any], kind: str, title: str, path: str,
+                         body: Optional[str] = None) -> None:
+        """Announce new content on every enabled channel, within per-channel daily caps."""
+        if not self.site_url or not policy.action_allowed("distribute_post"):
+            return
+        url = f"{self.site_url}{path}"
+        since = (now() - timedelta(hours=24)).isoformat()
+        async with httpx.AsyncClient(timeout=20) as client:
+            if self.indexnow.enabled():
+                try:
+                    await self.indexnow.ping(client, url)
+                    await self.log(division, "marketer", "indexed", f"Submitted {path} to IndexNow")
+                except Exception as e:
+                    logger.warning("IndexNow failed: %s", e)
+
+            for channel in self.channels:
+                if kind == "product" and channel.name == "devto":
+                    continue
+                recent = await self.store.select(
+                    "distributions", division_id=f"eq.{division['id']}", channel=f"eq.{channel.name}",
+                    status="eq.posted", created_at=f"gte.{since}")
+                if len(recent) >= self.daily_post_cap:
+                    continue
+                row = {"division_id": division["id"], "channel": channel.name, "kind": kind, "target_url": url}
+                try:
+                    ref = await channel.post(client, title, url, body)
+                    await self.store.insert("distributions", {**row, "status": "posted", "external_ref": ref})
+                    await self.log(division, "marketer", "distributed", f"Posted to {channel.name}: {ref}")
+                except Exception as e:
+                    # One failure must not trigger retries or a posting storm
+                    await self.store.insert("distributions", {**row, "status": "failed", "error": str(e)[:300]})
+                    await self.log(division, "marketer", "distribution_failed", f"{channel.name} failed: {e}")
 
     # ---- bookkeeping ----------------------------------------------------------------
 

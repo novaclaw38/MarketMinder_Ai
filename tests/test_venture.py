@@ -12,7 +12,7 @@ class FakeStore:
     """In-memory stand-in for VentureStore supporting the filters the engine uses."""
 
     def __init__(self):
-        self.t = {k: [] for k in ["divisions", "division_agents", "activity_log", "products", "articles", "ledger"]}
+        self.t = {k: [] for k in ["divisions", "division_agents", "activity_log", "products", "articles", "ledger", "distributions"]}
 
     @staticmethod
     def _match(row, params):
@@ -87,7 +87,7 @@ def run(coro):
 def test_launch_build_publish_and_policy_rejection(stub_llm):
     async def go():
         store = FakeStore()
-        engine = VentureEngine(store)
+        engine = VentureEngine(store, channels=[])
         await engine.tick()
         assert [d["name"] for d in store.t["divisions"]] == ["Cafe Price Check"]  # casino idea rejected
         assert len(store.t["products"]) == 1  # built in the launch tick
@@ -101,7 +101,7 @@ def test_launch_build_publish_and_policy_rejection(stub_llm):
 def test_deleted_when_no_profit_at_deadline(stub_llm):
     async def go():
         store = FakeStore()
-        engine = VentureEngine(store)
+        engine = VentureEngine(store, channels=[])
         await engine.tick()
         past = (datetime.now(timezone.utc) - timedelta(minutes=1)).isoformat()
         store.t["divisions"][0]["deadline"] = past
@@ -118,7 +118,7 @@ def test_deleted_when_no_profit_at_deadline(stub_llm):
 def test_renewed_when_profitable_and_support_agent_spawned(stub_llm):
     async def go():
         store = FakeStore()
-        engine = VentureEngine(store)
+        engine = VentureEngine(store, channels=[])
         await engine.tick()
         await engine.tick()
         div = store.t["divisions"][0]
@@ -134,7 +134,7 @@ def test_renewed_when_profitable_and_support_agent_spawned(stub_llm):
 def test_budget_exhaustion_deletes_unprofitable_division(stub_llm):
     async def go():
         store = FakeStore()
-        engine = VentureEngine(store)
+        engine = VentureEngine(store, channels=[])
         await engine.tick()
         div = store.t["divisions"][0]
         await engine.cost(div, div["budget_cents"], "spent")
