@@ -8,22 +8,24 @@ export default async function ProductPage({
   params,
   searchParams
 }: {
-  params: { slug: string }
-  searchParams: { session_id?: string }
+  params: Promise<{ slug: string }>
+  searchParams: Promise<{ session_id?: string }>
 }) {
+  const { slug } = await params
+  const { session_id } = await searchParams
   const { data: product } = await supabase
     .from('products')
     .select('*')
-    .eq('slug', params.slug)
+    .eq('slug', slug)
     .eq('status', 'published')
     .maybeSingle()
   if (!product) return <main className="p-8">This product is no longer available.</main>
 
   // The deliverable is shown only for a paid checkout session belonging to this product
   let paid = false
-  if (searchParams.session_id) {
+  if (session_id) {
     try {
-      const session = await stripe.checkout.sessions.retrieve(searchParams.session_id)
+      const session = await stripe.checkout.sessions.retrieve(session_id)
       paid = session.payment_status === 'paid' && session.metadata?.product_id === product.id
     } catch {
       paid = false
