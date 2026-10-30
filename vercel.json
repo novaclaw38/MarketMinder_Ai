@@ -1,4 +1,7 @@
 {
+  "framework": "nextjs",
+  "installCommand": "npm install",
+  "buildCommand": "npm run build",
   "crons": [
     { "path": "/api/cron/orchestrate", "schedule": "0 5 * * *" },
     { "path": "/api/cron/venture", "schedule": "30 5 * * *" }

@@ -27,7 +27,7 @@ Pricing (monthly, ZAR, adjustable): Starter R299 (1 brief + 5 questions), Profes
 
 ## 2. Agent architecture
 
-One orchestrator (**Mission Control**, `core/mission_control.py`) and six specialists (`agents/`), all inheriting from `BaseAgent`. Agents never talk to each other directly; every task passes through Mission Control, which routes it, tracks health and enforces limits.
+One orchestrator (**Mission Control**, `python/core/mission_control.py`) and six specialists (`python/agents/`), all inheriting from `BaseAgent`. Agents never talk to each other directly; every task passes through Mission Control, which routes it, tracks health and enforces limits.
 
 | Agent | Responsibility | Representative tasks |
 |-------|---------------|----------------------|
@@ -41,7 +41,7 @@ One orchestrator (**Mission Control**, `core/mission_control.py`) and six specia
 **Orchestration rules**
 1. **Routing:** a fixed task-type to agent table in Mission Control. Unknown task types are rejected, not guessed.
 2. **Execution:** every task has a priority (1-10), a timeout (default 300 s) and a result or error recorded on the task.
-3. **Health:** each agent reports status (`idle`, `processing`, `error`, `offline`, `needs_attention`), completed and failed counts and queue length. A worker mirrors this into Supabase every 30 s (`scripts/worker.py`).
+3. **Health:** each agent reports status (`idle`, `processing`, `error`, `offline`, `needs_attention`), completed and failed counts and queue length. A worker mirrors this into Supabase every 30 s (`python/scripts/worker.py`).
 4. **Shared state:** Supabase Postgres is the single source of truth. Agents read and write tables; the dashboard reads the same tables.
 5. **Scheduling:** a Vercel cron every 10 minutes processes queued analysis requests and recomputes health. The long-running worker runs the agents' own loops.
 6. **Human gates** (section 4) sit between agents and any irreversible or external action.
@@ -151,8 +151,8 @@ The stakes device is implemented as a **wind-down protocol**, not a threat: on a
 | Dashboard and API | Next.js on Vercel (`app/`): `/dashboard`, `/login`, `/api/metrics`, `/api/agents`, `/api/analyze`, `/api/analyses`, `/api/billing/*`, `/api/cron/orchestrate` |
 | Database and auth | Supabase Postgres with Row Level Security and Supabase Auth (`supabase/migrations/`) |
 | Venture engine | TypeScript (`lib/venture/`), triggered at `/api/cron/venture` every 10 minutes by GitHub Actions (Vercel Hobby crons are daily only) |
-| Legacy agents | Python (`agents/`, `core/mission_control.py`), optional, run by `scripts/worker.py` on any always-on host (Docker compose service provided) |
-| Sync | `core/supabase_sync.py` mirrors agent health and metrics to Supabase |
+| Legacy agents | Python (`agents/`, `python/core/mission_control.py`), optional, run by `python/scripts/worker.py` on any always-on host (Docker compose service provided) |
+| Sync | `python/core/supabase_sync.py` mirrors agent health and metrics to Supabase |
 | Payments | Stripe code in `lib/stripe.ts` and the webhook. **Needs a processor supported for South African merchants (A4)**; the webhook and checkout are the only places that change. |
 | LLM | Groq (OpenAI-compatible API) via `lib/analysis.ts` and `lib/venture/llm.ts`; model set by `GROQ_MODEL`; OpenAI is a fallback |
 
