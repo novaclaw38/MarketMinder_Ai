@@ -3,11 +3,12 @@ import { supabase } from '../../../lib/supabase'
 
 export const dynamic = 'force-dynamic'
 
-export default async function Article({ params }: { params: { slug: string } }) {
+export default async function Article({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
   const { data: article } = await supabase
     .from('articles')
     .select('title, body, products(slug, title)')
-    .eq('slug', params.slug)
+    .eq('slug', slug)
     .eq('status', 'published')
     .maybeSingle()
   if (!article) return <main className="p-8">Article not found.</main>
